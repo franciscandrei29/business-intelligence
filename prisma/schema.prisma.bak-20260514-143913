@@ -1,0 +1,437 @@
+// Kimono BI Standalone — Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String?
+  lastName       String?
+  fullName       String
+  company        String?
+  website        String?
+  phone          String?
+  employeeCount  String?
+  industry       String?
+  gdprConsent    Boolean  @default(false)
+  newsletterConsent Boolean @default(false)
+  referralSource String?
+  emailVerified  Boolean   @default(false)
+  verifyToken    String?
+  resetToken     String?
+  resetExpires   DateTime?
+  lastLoginAt    DateTime?
+  isSuperAdmin   Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sessions       UserSession[]
+  stores         StoreConnection[]
+  subscription   Subscription?
+  ownedMemberships  TeamMembership[] @relation("OwnerMemberships")
+  myMembership      TeamMembership?  @relation("UserMembership")
+}
+
+model CronRun {
+  id          String    @id @default(cuid())
+  name        String    // ex: "cron-sync", "cron-rfm", "cron-digest"
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  durationMs  Int?
+  success     Boolean   @default(false)
+  error       String?   @db.Text
+  metadata    Json?     // counts, store IDs, etc.
+  @@index([name, startedAt])
+  @@index([startedAt])
+}
+
+model EmailLog {
+  id          String    @id @default(cuid())
+  to          String
+  subject     String
+  category    String    // ex: "verify", "reset", "team_invite", "stripe_invoice", "store_connected", "first_sync", "actions_digest"
+  success     Boolean   @default(false)
+  error       String?   @db.Text
+  metadata    Json?
+  sentAt      DateTime  @default(now())
+  @@index([category, sentAt])
+  @@index([to])
+  @@index([sentAt])
+}
+
+model ActivityEvent {
+  id            String   @id @default(cuid())
+  type          String   // signup, store_connected, plan_changed, plan_canceled, payment_succeeded, payment_failed, member_joined, admin_impersonate, admin_change_plan, admin_extend_trial, admin_verify_email, etc.
+  actorUserId   String?  // who performed the action (null for system/webhook events)
+  targetUserId  String?  // affected user (different from actor for admin actions)
+  storeId       String?  // optional: related store
+  description   String   @db.Text
+  metadata      Json?    // arbitrary extra data per event type
+  createdAt     DateTime @default(now())
+  @@index([type, createdAt])
+  @@index([actorUserId])
+  @@index([targetUserId])
+  @@index([createdAt])
+}
+
+model TeamMembership {
+  id           String    @id @default(cuid())
+  ownerId      String
+  owner        User      @relation("OwnerMemberships", fields: [ownerId], references: [id], onDelete: Cascade)
+  email        String
+  userId       String?   @unique
+  user         User?     @relation("UserMembership", fields: [userId], references: [id], onDelete: SetNull)
+  role         String
+  invitedAt    DateTime  @default(now())
+  inviteToken  String?   @unique
+  acceptedAt   DateTime?
+  @@unique([ownerId, email])
+  @@index([ownerId])
+  @@index([email])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([token])
+  @@index([userId])
+}
+
+model StoreConnection {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  Platform
+  name      String
+  domain    String
+  shopifyAccessToken String?
+  shopifyShopId      String?
+  shopifyRefreshToken String?
+  shopifyTokenExpiresAt DateTime?
+  wooConsumerKey    String?
+  wooConsumerSecret String?
+  wooApiUrl         String?
+  isActive   Boolean    @default(true)
+  lastSyncAt DateTime?
+  firstSyncCompletedAt DateTime?
+  syncIntervalMinutes Int      @default(60)
+  syncStatus SyncStatus @default(PENDING)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  products     Product[]
+  orders       Order[]
+  customers    Customer[]
+  rfmSegments  RfmSegment[]
+  cohorts      Cohort[]
+  aiReports    AiReport[]
+  stockAlerts  StockAlert[]
+  productCosts ProductCost[]
+  aiInsights   AiInsight[]
+  settings       StoreSettings?
+  dailyForecasts DailyForecast[]
+  dailyMargins   DailyMargin[]
+  courierTracking CourierTracking[]
+  @@index([userId])
+  @@index([domain])
+}
+
+enum Platform {
+  SHOPIFY
+  WOOCOMMERCE
+  EMAG
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  Plan      @default(FREE)
+  status                SubStatus @default(ACTIVE)
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  trialEndsAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+enum Plan {
+  FREE
+  STARTER
+  GROWTH
+  SCALE
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIAL
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  externalId     String
+  title          String
+  sku            String?
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPerUnit    Decimal? @db.Decimal(10, 2)
+  inventory      Int      @default(0)
+  vendor         String?
+  productType    String?
+  tags           String[]
+  imageUrl       String?
+  handle         String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  courierTracking CourierTracking[]
+
+  @@unique([storeConnectionId, externalId])
+  @@index([storeConnectionId])
+}
+
+model Order {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  externalId        String
+  orderNumber       String?
+  customerId        String?
+  customer          Customer? @relation(fields: [customerId], references: [id])
+  total             Decimal  @db.Decimal(10, 2)
+  subtotal          Decimal? @db.Decimal(10, 2)
+  totalRefunded     Decimal? @db.Decimal(10, 2)
+  discountTotal     Decimal? @db.Decimal(10, 2)
+  discountCode      String?
+  currency          String   @default("RON")
+  status            String
+  financialStatus   String?
+  fulfillmentStatus String?
+  itemsCount        Int      @default(0)
+  lineItems         String?  @db.Text
+  placedAt          DateTime
+  fulfilledAt       DateTime?
+  returnsCount      Int      @default(0)
+  returnsAmount     Decimal? @db.Decimal(10, 2)
+  returnItems       String?  @db.Text
+  createdAt         DateTime @default(now())
+  courierTracking CourierTracking[]
+
+  @@unique([storeConnectionId, externalId])
+  @@index([storeConnectionId, placedAt])
+  @@index([customerId])
+}
+
+model Customer {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  externalId   String
+  email        String?
+  firstName    String?
+  lastName     String?
+  phone        String?
+  totalSpent   Decimal  @default(0) @db.Decimal(10, 2)
+  ordersCount  Int      @default(0)
+  firstOrderAt DateTime?
+  lastOrderAt  DateTime?
+  tags         String[]
+  emailSubscribed Boolean @default(false)
+  orders       Order[]
+  courierTracking CourierTracking[]
+
+  @@unique([storeConnectionId, externalId])
+  @@index([storeConnectionId])
+}
+
+model RfmSegment {
+  id                  String   @id @default(cuid())
+  storeConnectionId   String
+  storeConnection     StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  customerExternalId  String
+  rScore              Int
+  fScore              Int
+  mScore              Int
+  segment             String
+  calculatedAt        DateTime @default(now())
+  @@unique([storeConnectionId, customerExternalId])
+  @@index([storeConnectionId, segment])
+}
+
+model Cohort {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  cohortMonth      String
+  monthNumber      Int
+  activeCustomers  Int
+  retentionRate    Float
+  revenue          Decimal  @default(0) @db.Decimal(10, 2)
+  calculatedAt     DateTime @default(now())
+  @@unique([storeConnectionId, cohortMonth, monthNumber])
+  @@index([storeConnectionId])
+}
+
+model AiReport {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  type       String
+  title      String
+  content    String   @db.Text
+  tokensUsed Int      @default(0)
+  costUsd    Decimal  @default(0) @db.Decimal(8, 4)
+  createdAt  DateTime @default(now())
+  @@index([storeConnectionId])
+}
+
+model StockAlert {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  productExternalId String
+  productTitle      String
+  currentStock      Int
+  velocityPerDay    Float
+  daysRemaining     Int
+  severity          String
+  createdAt         DateTime @default(now())
+  @@index([storeConnectionId, severity])
+}
+
+model ProductCost {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  productExternalId String
+  productTitle      String
+  sku               String?
+  costPerUnit       Decimal  @db.Decimal(10, 2)
+  currency          String   @default("RON")
+  supplier          String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@unique([storeConnectionId, productExternalId])
+  @@index([storeConnectionId])
+}
+
+model AiInsight {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  type              String   @default("ON_DEMAND")
+  periodDays        Int      @default(30)
+  causalAnalysis    String   @db.Text
+  recommendations   String   @db.Text
+  dataSnapshot      String?  @db.Text
+  healthScore       Int?
+  tokensUsed        Int      @default(0)
+  costUsd           Decimal  @default(0) @db.Decimal(8, 4)
+  generatedAt       DateTime @default(now())
+  @@index([storeConnectionId])
+  @@index([generatedAt])
+}
+
+model StoreSettings {
+  id                String   @id @default(cuid())
+  storeConnectionId String   @unique
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  aiLanguage      String   @default("ro")
+  aiTone          String   @default("professional")
+  stockThreshold  Int      @default(5)
+  stockEmailTo    String?
+  rfmRecencyDays  Int      @default(365)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DailyForecast {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  forecastData      String   @db.Text
+  next30            Decimal  @db.Decimal(12, 2)
+  next60            Decimal  @db.Decimal(12, 2)
+  next90            Decimal  @db.Decimal(12, 2)
+  prev30            Decimal  @db.Decimal(12, 2)
+  growthPct         Float
+  method            String
+  calculatedAt      DateTime @default(now())
+  @@index([storeConnectionId, calculatedAt])
+}
+
+model DailyMargin {
+  id                String   @id @default(cuid())
+  storeConnectionId String
+  storeConnection   StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+  date              DateTime
+  revenue           Decimal  @db.Decimal(12, 2)
+  cogs              Decimal  @db.Decimal(12, 2)
+  margin            Decimal  @db.Decimal(12, 2)
+  marginPct         Float
+  ordersCount       Int      @default(0)
+  calculatedAt      DateTime @default(now())
+  @@unique([storeConnectionId, date])
+  @@index([storeConnectionId])
+}
+
+// ============================================
+// COURIER TRACKING (SameDay Integration)
+// ============================================
+model CourierTracking {
+  id                  String    @id @default(cuid())
+  storeConnectionId   String
+  storeConnection     StoreConnection @relation(fields: [storeConnectionId], references: [id], onDelete: Cascade)
+
+  awb                 String
+  orderId             String?
+  order               Order?    @relation(fields: [orderId], references: [id])
+  orderExternalId     String?
+  orderNumber         String?
+
+  statusId            Int
+  statusName          String
+  inReturn            Boolean   @default(false)
+
+  isDelivered         Boolean   @default(false)
+  isReturned          Boolean   @default(false)
+  isCod               Boolean   @default(false)
+  codAmount           Float?
+  servicePayment      Float?
+
+  shopifyPaymentMarked Boolean  @default(false)
+  shopifyMarkedAt      DateTime?
+
+  county              String?
+  courierUpdatedAt    DateTime?
+  firstSeenAt         DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([storeConnectionId, awb])
+  @@index([storeConnectionId, isDelivered])
+  @@index([storeConnectionId, isReturned])
+  @@index([orderId])
+}

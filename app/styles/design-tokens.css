@@ -1,0 +1,139 @@
+/* Kimono BI — Design Tokens v2 (Stripe-inspired, minimal) */
+
+:root {
+  /* Brand Kimono */
+  --kimono-orange: #D85A30;
+  --kimono-orange-hover: #BA4A26;
+  --kimono-orange-active: #993C1D;
+  --kimono-orange-bg: #FFF5F0;
+  --kimono-orange-bg-strong: #FAECE7;
+  --kimono-orange-border: #F5C4B3;
+  --kimono-orange-text: #993C1D;
+  --kimono-orange-text-dark: #4A1B0C;
+
+  /* Surfaces */
+  --bg-page: #FAFAF9;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #FAFAF9;
+  --bg-tertiary: #F1EFE8;
+  --bg-dark: #1A1A1A;
+  --bg-darkest: #0A0A0A;
+
+  /* Borders */
+  --border-default: #EAEAEA;
+  --border-strong: #D3D1C7;
+  --border-focus: #D85A30;
+
+  /* Text */
+  --text-primary: #1A1A1A;
+  --text-secondary: #5F5E5A;
+  --text-tertiary: #888780;
+  --text-muted: #B4B2A9;
+  --text-inverse: #FFFFFF;
+
+  /* Success */
+  --success-bg: #E1F5EE;
+  --success-bg-strong: #1D9E75;
+  --success-bg-dark: #0F6E56;
+  --success-border: #5DCAA5;
+  --success-text: #0F6E56;
+  --success-text-dark: #085041;
+
+  /* Warning */
+  --warning-bg: #FAEEDA;
+  --warning-bg-strong: #EF9F27;
+  --warning-text: #854F0B;
+  --warning-text-dark: #633806;
+
+  /* Danger */
+  --danger-bg: #FCEBEB;
+  --danger-bg-strong: #E24B4A;
+  --danger-text: #A32D2D;
+  --danger-text-dark: #791F1F;
+
+  /* Info */
+  --info-bg: #E6F1FB;
+  --info-bg-strong: #378ADD;
+  --info-text: #185FA5;
+  --info-text-dark: #042C53;
+
+  /* Accent secondary */
+  --accent-purple: #7F77DD;
+  --accent-purple-bg: #EEEDFE;
+  --accent-pink: #D4537E;
+  --accent-pink-bg: #FBEAF0;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Spacing legacy aliases */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Border radius */
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-pill: 999px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(216, 90, 48, 0.15);
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-default: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Layout */
+  --sidebar-width: 220px;
+
+  /* Legacy aliases (landing page + old routes compat) */
+  --color-black: #1A1A1A;
+  --color-white: #FFFFFF;
+  --color-off-white: #FAFAF9;
+  --color-accent: #D85A30;
+  --color-accent-hover: #BA4A26;
+  --color-accent-light: #FFF5F0;
+  --color-muted: #5F5E5A;
+  --color-success: #0F6E56;
+  --color-warning: #EF9F27;
+  --color-danger: #E24B4A;
+  --color-info: #378ADD;
+  --color-primary: #D85A30;
+  --color-text: #1A1A1A;
+  --color-text-heading: #1A1A1A;
+  --color-text-muted: #5F5E5A;
+  --color-text-secondary: #5F5E5A;
+  --color-bg: #FAFAF9;
+  --color-bg-secondary: #FAFAF9;
+  --color-bg-tertiary: #F1EFE8;
+  --color-card: #FFFFFF;
+  --color-border: #EAEAEA;
+  --radius-full: 999px;
+}

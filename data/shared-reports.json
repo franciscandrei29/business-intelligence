@@ -1,0 +1,41 @@
+[
+  {
+    "id": "9235df8b18e623089177b4d9",
+    "userId": "155a894e-746d-4baa-926d-661058a7fab4",
+    "shareId": "9c3dac182d90272b72f60af8b33b6412",
+    "reportType": "rfm",
+    "reportData": {
+      "type": "RFM Analysis",
+      "totalCustomers": 15846,
+      "segments": {
+        "Potential Loyalist": 3403,
+        "Recent Customers": 2403,
+        "Champions": 426,
+        "Promising": 475,
+        "Lost": 3677,
+        "Need Attention": 5019,
+        "Loyal Customers": 166,
+        "At Risk": 277
+      }
+    },
+    "storeName": "vivimall.ro",
+    "createdAt": "2026-04-27T08:16:54.657Z",
+    "expiresAt": "2026-05-04T08:16:54.657Z"
+  },
+  {
+    "id": "aad4109269c4e00ffb13203d",
+    "userId": "155a894e-746d-4baa-926d-661058a7fab4",
+    "shareId": "ef48378540184f318237f3d538e4a3a1",
+    "reportType": "dashboard",
+    "reportData": {
+      "type": "Dashboard Summary",
+      "productCount": 4544,
+      "orderCount": 11900,
+      "customerCount": 8251,
+      "totalRevenue": 2001084.03
+    },
+    "storeName": "SolPlant.ro",
+    "createdAt": "2026-04-30T11:33:16.207Z",
+    "expiresAt": "2026-07-29T11:33:16.207Z"
+  }
+]
