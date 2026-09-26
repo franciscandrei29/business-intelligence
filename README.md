@@ -2,8 +2,6 @@
 
 Aplicatie de analytics pentru magazine online. Conectezi magazinul tau Shopify, WooCommerce sau eMAG si ea sincronizeaza comenzi, produse si clienti in fiecare ora. De acolo calculeaza marje, segmente RFM, cohorte de retentie, previziuni vanzari, alerte stoc si multe altele. Are billing prin Stripe, invite-uri de echipa si un tracker de costuri curierat care reconciliaza facturile SameDay cu fiecare AWB in parte.
 
-Am construit totul cu Claude Code. De la design-ul schemei de baze de date pana la deploy in productie.
-
 ## Stack
 
 Remix 2 + Vite + TypeScript pe frontend si server. PostgreSQL cu Prisma (17 modele, migratii). Stripe pentru billing. Brevo pentru email tranzactional. Ruleaza pe un VPS Linux cu PM2 in cluster mode (4 instante) in spatele Apache cu SSL. 12 cron jobs se ocupa de procesarile din background.
@@ -91,11 +89,3 @@ npm start
 ## Deploy
 
 PM2 cluster mode cu 4 workeri, Apache reverse proxy, SSL Let's Encrypt. Cron jobs sunt simple intrari in crontab-ul sistemului care apeleaza scripturile din `scripts/`.
-
-## Cum am folosit Claude Code
-
-Am folosit Claude Code pentru practic tot ce e aici. Design schema, structura rutelor, fiecare modul de analytics (scoring RFM, calcule cohorte, matematica de forecast, logica de marje), toate integrarile API (Shopify OAuth, Stripe webhooks, SameDay courier API, Brevo email) si cele 12 cron jobs.
-
-Unde a trebuit sa il corectez: Claude Code uneori suprainginerizea lucrurile cu abstractii inutile pe care le-am simplificat. A scris apeluri Shopify GraphQL cu field-uri depreciate in versiunea API 2025-04. Nu stia formatul facturilor de curierat romanesti (structura CSV SameDay, ce campuri sa matchuiasca), asa ca a trebuit sa il ghidez. A avut nevoie si de instructiuni explicite pentru calculele financiare cu RON si zecimale.
-
-Debugging-ul in productie l-am facut tot in sesiuni Claude Code. PM2 lovea limita de 1GB memorie din cauza unor leak-uri de connection pool, Prisma avea nevoie de tuning pe `connection_limit`, si OAuth token refresh de la Shopify avea un race condition in care doua rulari de cron incercau sa refresheze acelasi token simultan.
